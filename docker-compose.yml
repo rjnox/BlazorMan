@@ -1,0 +1,44 @@
+version: "3.9"
+
+networks:
+    web:
+        driver: bridge
+
+services:
+    web:
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Development
+        build: ./BlazorMan
+        ports:
+            - "5001:80"
+        depends_on:
+            - db
+    db:
+        image: "mcr.microsoft.com/mssql/server:2019-latest"
+        ports:
+            - "1433:1433"
+        environment:
+            SA_PASSWORD: "T3ST1234!"
+            ACCEPT_EULA: "Y"
+    
+    mkcert: # Build certificates for nginx.
+        container_name: mkcert
+        image: vishnunair/docker-mkcert
+        environment: 
+            domain: 127.0.0.1
+        volumes:
+            - ./nginx/certs-enabled/:/root/.local/share/mkcert
+    nginx:
+        volumes:
+            - ./nginx/certs-enabled/:/etc/nginx/certs
+            - ./nginx/logs:/var/log/nginx
+            - ./nginx/sites-enabled:/etc/nginx/conf.d
+        container_name: nginx
+        depends_on:
+            - mkcert
+        image: nginx:1.19
+        command: nginx -g "daemon off;"
+        networks:
+            - web
+        ports:
+            - 443:443

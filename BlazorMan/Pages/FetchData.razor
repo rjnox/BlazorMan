@@ -1,0 +1,52 @@
+﻿@page "/fetchdata"
+
+@using BlazorMan.Data
+@inject ScoreBoardService ScoreBoardService
+
+<h1>Score Board</h1>
+
+<p>And the winner is ...</p>
+
+@if (scores == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>UserName</th>
+                <th># Words Found</th>
+                <th>Guesses</th>
+                <th>Time In Seconds</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int i = 0; }
+            @foreach (var score in scores)
+            {
+                i++;
+                <tr>
+                    <td>@i</td>
+                    <td>@score.UserName</td>
+                    <td>@score.WordCount</td>
+                    <td>@score.Guesses</td>
+                    <td>@score.TimeElapsed</td>
+                    <td>@score.Date.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Score[] scores;
+
+    protected override async Task OnInitializedAsync()
+    {
+        scores = await ScoreBoardService.GetScoresAsync();
+    }
+}

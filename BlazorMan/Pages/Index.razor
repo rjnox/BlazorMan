@@ -1,0 +1,144 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Http;
+@using System.Security.Claims;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@inject GameSessionService GameSessionService
+
+@page "/"
+
+@if (model.GameState == GameState.GameOver)
+{
+    <h2 class="font-weight-bold text-danger">GAME OVER</h2>
+    <span>Hard luck! Click 'New Game' below to have another go.</span>
+}
+else if (model.GameState == GameState.WordFound)
+{
+    <h2 class="font-weight-bold text-success">You guessed it! Well done!</h2>
+    <span>Click 'Next Word' below to keep going.</span>
+}
+else
+{
+    <h2 class="font-weight-bold text-warning">Hang on in there, man!</h2>
+    <span>You have 3 minutes to guess as many words as possible. Good luck!</span>
+}
+
+@code {
+
+    ClaimsPrincipal user;
+    LetterValidator letterValidator;
+    GameModel model = new GameModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Login();
+    }
+
+    private async Task Login()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            this.user = user;
+            model.GameSession = GameSessionService.Get(user);
+
+            if (model.GameState == GameState.Idle)
+            {
+                NewGame();
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("Accounts/Login");
+        }
+    }
+
+    private async Task StopWatch()
+    {
+        while (model.GameSession.Active)
+        {
+            await Task.Delay(1000);
+
+            if (model.GameSession.Active)
+            {
+                model.TimeElapsed = model.TimeElapsed.Add(new TimeSpan(0, 0, 1));
+
+                if (model.TimeElapsed >= model.TimeAllowed)
+                {
+                    this.GameSessionService.GameOver(model.GameSession, this.user);
+                    model.GameState = GameState.GameOver;
+                }
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void GiveUp()
+    {
+        GameSessionService.GameOver(model.GameSession, HttpContextAccessor.HttpContext.User);
+        model.GameState = GameState.GameOver;
+    }
+
+    private void NewGame()
+    {
+        model.Word = GameSessionService.NewGame(model.GameSession);
+        model.TimeElapsed = TimeSpan.Zero;
+        model.WrongGuesses = 0;
+        model.GameState = GameState.Playing;
+        StopWatch();
+    }
+
+    private void NextWord()
+    {
+        model.Word = GameSessionService.ChangeWord(model.GameSession);
+        model.WrongGuesses = 0;
+        model.GameState = GameState.Playing;
+    }
+}
+
+<img class="img-fluid hangman" src="img\@(model.GameSession.CurrentWordGuesses).png" />
+
+<EditForm Model="model">
+    <DataAnnotationsValidator />
+    <LetterValidator @ref="letterValidator" />
+
+    <div class="form-row">
+        <div class="form-group text-center letters">
+            @foreach (var letter in model.Letters)
+            {
+                <LetterInput id="@model.Letters.IndexOf(letter)" class="form-control-sm text-center letter"
+                             @bind-LetterIndex="@letter.LetterIndex" @bind-Value="@letter.Value"
+                             disabled="@(model.GameState != GameState.Playing)" maxlength="1" size="1" placeholder="_" />
+            }
+        </div>
+    </div>
+</EditForm>
+
+<div class="row">
+    <div class="col-sm-12 col-sm-offset-1">
+        <div class="input-group">
+            <span class="input-group-btn">
+                @if (model.GameState == GameState.WordFound)
+                {
+                    <a href="#" class="btn btn-success text-light" @onclick="() => NextWord()">NEXT WORD</a>
+                }
+                else if (model.GameSession.Active)
+                {
+                    <a href="#" class="btn btn-danger text-light" @onclick="() => GiveUp()">GIVE UP</a>
+                }
+                else
+                {
+                    <a href="#" class="btn btn-success text-light" @onclick="() => NewGame()">NEW GAME</a>
+                }
+            </span>
+            <label class="control-label stat-label">@model.TimeElapsed</label>
+            <label class="control-label stat-label">Wrong Guesses: @model.WrongGuesses</label>
+            <label class="control-label stat-label">Total Guesses: @model.GameSession.TotalGuesses</label>
+            <label class="control-label stat-label">Words Found: @model.GameSession.WordCount</label>
+        </div>
+    </div>
+</div>
