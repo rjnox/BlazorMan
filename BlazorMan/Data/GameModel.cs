@@ -27,8 +27,8 @@ namespace BlazorMan.Data
             }
         }
         public List<LetterGuess> Letters { get; set; }
-        public TimeSpan TimeElapsed { get; set; }
-        public TimeSpan TimeAllowed => TimeSpan.FromMinutes(3);
+        public long TimeElapsed { get; set; }
+        public long TimeAllowed => TimeSpan.FromMinutes(3).Ticks;
         public int GuessesAllowedPerWord => 11;
         public int WrongGuesses { get; set; }
     }

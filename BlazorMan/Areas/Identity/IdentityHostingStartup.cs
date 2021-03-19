@@ -13,9 +13,9 @@ namespace BlazorMan.Areas.Identity
         public void Configure(IWebHostBuilder builder)
         {
             builder.ConfigureServices((context, services) => {
-                services.AddDbContext<BlazorManContext>(options =>
+                services.AddDbContext<BlazorManContext>();/*(options =>
                     options.UseSqlServer(
-                        context.Configuration.GetConnectionString("BlazorManContextConnection")));
+                        context.Configuration.GetConnectionString("BlazorManContextConnection")));*/
 
                 services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                     .AddEntityFrameworkStores<BlazorManContext>();

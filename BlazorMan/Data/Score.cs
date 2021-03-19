@@ -13,6 +13,6 @@ namespace BlazorMan.Data
         public string UserName { get; set; }
         public int Guesses { get; set; }
         public int WordCount { get; set; }
-        public TimeSpan TimeElapsed { get; set; }
+        public long TimeElapsed { get; set; }
     }
 }

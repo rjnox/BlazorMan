@@ -33,7 +33,7 @@ namespace BlazorMan
             services.AddScoped<LetterGuessService>();
             services.AddScoped<ScoreBoardService>();
 
-            services.AddDbContext<BlazorManContext>(options => options.UseSqlServer(Configuration.GetConnectionString("BlazorManContextConnection")));
+            services.AddDbContext<BlazorManContext>();//(options => options.UseSqlServer(Configuration.GetConnectionString("BlazorManContextConnection")));
 
             services.AddHostedService<PopulateDatabaseHostedService>();
         }

@@ -34,7 +34,7 @@ else
                     <td>@score.UserName</td>
                     <td>@score.WordCount</td>
                     <td>@score.Guesses</td>
-                    <td>@score.TimeElapsed</td>
+                    <td>@TimeSpan.FromTicks(score.TimeElapsed).TotalSeconds</td>
                     <td>@score.Date.ToShortDateString()</td>
                 </tr>
             }

@@ -1,4 +1,5 @@
 using BlazorMan.Shared.Web.MvcExtensions;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -8,10 +9,12 @@ namespace BlazorMan.Data
     public class GameSessionService
     {
         private readonly BlazorManContext _dbContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public GameSessionService (BlazorManContext dbContext)
+        public GameSessionService (BlazorManContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public GameSession Get(ClaimsPrincipal user)
@@ -75,7 +78,7 @@ namespace BlazorMan.Data
                 WordCount = session.WordCount,
                 UserId = session.UserId,
                 UserName = user.Identity.Name,
-                TimeElapsed = DateTime.Now.Subtract(session.StartTime)
+                TimeElapsed = DateTime.Now.Subtract(session.StartTime).Ticks
             });
 
             _dbContext.SaveChanges();
@@ -84,17 +87,27 @@ namespace BlazorMan.Data
 
         public Word NewGame(GameSession session)
         {
+            int wordId;
             var dbSession = Get(session.SessionId);
-            dbSession.Active = true;
-            dbSession.StartTime = DateTime.Now;
-            dbSession.WordId = GetRandomWord().Id;
-            dbSession.CurrentWordGuesses = 0;
-            dbSession.TotalGuesses = 0;
-            dbSession.WordCount = 0;
+
+            if (dbSession == null)
+                Create(_httpContextAccessor.HttpContext.User);
+            else
+            {
+                dbSession.Active = true;
+                dbSession.StartTime = DateTime.Now;
+                dbSession.WordId = GetRandomWord().Id;
+                dbSession.CurrentWordGuesses = 0;
+                dbSession.TotalGuesses = 0;
+                dbSession.WordCount = 0;
+            }
+
+            wordId = dbSession.WordId;
+
             _dbContext.SaveChanges();
             SyncClientSession(session, dbSession);
 
-            return _dbContext.Words.FirstOrDefault(w => w.Id == dbSession.WordId);
+            return _dbContext.Words.FirstOrDefault(w => w.Id == wordId);
         }
 
         private GameSession Create(ClaimsPrincipal user)
@@ -123,7 +136,17 @@ namespace BlazorMan.Data
             throw new Exception("Couldn't create a game session");
         }
 
-        private Word GetRandomWord() => _dbContext.Words.OrderBy(x => Guid.NewGuid()).Take(1).FirstOrDefault();
+        private Word GetRandomWord()
+        {
+            //string guidAsSort = Guid.NewGuid().ToString(); // SqlLite doesn't like guid
+            //return _dbContext.Words.OrderBy(x => guidAsSort).Take(1).FirstOrDefault();
+
+            // SqlLite solution
+            int total = _dbContext.Words.Count();
+            Random r = new Random();
+            int offset = r.Next(0, total);
+            return _dbContext.Words.Skip(offset).FirstOrDefault();
+        }
 
         private void ReuseSession(GameSession session, string userId, int wordId)
         {

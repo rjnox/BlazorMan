@@ -10,7 +10,7 @@ namespace BlazorMan
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build()
-                //.MigrateDatabase<BlazorManContext>()
+                .MigrateDatabase<BlazorManContext>()
                 .Run();
         }
 

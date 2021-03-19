@@ -64,7 +64,7 @@ else
 
             if (model.GameSession.Active)
             {
-                model.TimeElapsed = model.TimeElapsed.Add(new TimeSpan(0, 0, 1));
+                model.TimeElapsed = model.TimeElapsed + TimeSpan.TicksPerSecond;
 
                 if (model.TimeElapsed >= model.TimeAllowed)
                 {
@@ -86,7 +86,7 @@ else
     private void NewGame()
     {
         model.Word = GameSessionService.NewGame(model.GameSession);
-        model.TimeElapsed = TimeSpan.Zero;
+        model.TimeElapsed = 0;
         model.WrongGuesses = 0;
         model.GameState = GameState.Playing;
         StopWatch();

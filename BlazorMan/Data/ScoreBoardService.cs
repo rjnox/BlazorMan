@@ -38,7 +38,7 @@ namespace BlazorMan.Data
                 Date = DateTime.Now.AddDays(index),
                 UserId = index.ToString(),
                 UserName = Names[index],
-                TimeElapsed = new TimeSpan(0, 0, rng.Next(0, 60)),
+                TimeElapsed = new TimeSpan(0, 0, rng.Next(0, 60)).Ticks,
                 Guesses = rng.Next(0, 512),
                 WordCount = rng.Next(0, 8)
             }).OrderByDescending(s => s.WordCount).ThenBy(s => s.Guesses).ThenBy(s => s.TimeElapsed).ToArray());

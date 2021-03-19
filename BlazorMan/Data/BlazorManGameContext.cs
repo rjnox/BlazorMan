@@ -9,7 +9,13 @@ namespace BlazorMan.Data
         public BlazorManContext(DbContextOptions<BlazorManContext> options)
             : base(options)
         {
+            Database.EnsureCreated();
         }
+
+        // The following configures EF to create a Sqlite database file as `C:\blazorman.db`.
+        // For Mac or Linux, change this to `/tmp/blazorman.db` or any other absolute path.
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+            => options.UseSqlite(@"Data Source=C:\blazorman.db");
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

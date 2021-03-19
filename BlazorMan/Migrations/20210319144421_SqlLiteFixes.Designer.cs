@@ -3,14 +3,16 @@ using System;
 using BlazorMan.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BlazorMan.Migrations
 {
     [DbContext(typeof(BlazorManContext))]
-    partial class BlazorManContextModelSnapshot : ModelSnapshot
+    [Migration("20210319144421_SqlLiteFixes")]
+    partial class SqlLiteFixes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
